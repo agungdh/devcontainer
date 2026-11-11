@@ -111,6 +111,22 @@ RUN PROFILE_PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.opencode/bin:/
         | sudo tee /etc/profile.d/devcontainer-path.sh > /dev/null
 
 # ---------------------------------------------------------------------------
+# PHP 5.6 - 8.5 (Homebrew tap shivammathur/php)
+# ---------------------------------------------------------------------------
+ARG PHP_VERSIONS="5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3 8.4 8.5"
+
+RUN brew tap shivammathur/php \
+    && brew trust shivammathur/php \
+    && brew tap shivammathur/extensions \
+    && brew trust shivammathur/extensions \
+    && brew update \
+    && for v in ${PHP_VERSIONS}; do \
+        brew install "shivammathur/php/php@${v}"; \
+        brew unlink "php@${v}" > /dev/null 2>&1 || true; \
+    done \
+    && brew link --overwrite --force shivammathur/php/php@8.5
+
+# ---------------------------------------------------------------------------
 # Docker (repo resmi: https://docs.docker.com/engine/install/debian/)
 # Daemon tetap di host; container memakai /var/run/docker.sock
 # ---------------------------------------------------------------------------
