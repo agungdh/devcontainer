@@ -148,6 +148,20 @@ RUN printf '%s\n' \
         | sudo tee /usr/local/share/docker-init.sh > /dev/null \
     && sudo chmod +x /usr/local/share/docker-init.sh
 
+# ---------------------------------------------------------------------------
+# Podman (+ dukungan rootless)
+# ---------------------------------------------------------------------------
+RUN sudo apt-get update \
+    && sudo apt-get install -y --no-install-recommends \
+        podman \
+        uidmap \
+        slirp4netns \
+        fuse-overlayfs \
+        passt \
+    && sudo rm -rf /var/lib/apt/lists/* \
+    && sudo usermod -aG docker ${USERNAME} \
+    && sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 ${USERNAME}
+
 WORKDIR /workspaces
 
 ENTRYPOINT ["/usr/local/share/docker-init.sh"]
