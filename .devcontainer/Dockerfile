@@ -110,7 +110,33 @@ RUN PROFILE_PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.opencode/bin:/
     && echo "export PATH=\"${PROFILE_PATH}:\$PATH\"" \
         | sudo tee /etc/profile.d/devcontainer-path.sh > /dev/null
 
+# ---------------------------------------------------------------------------
+# Docker CLI + Compose (Docker-outside-of-Docker)
+# Daemon tetap di host; container hanya memakai /var/run/docker.sock
+# ---------------------------------------------------------------------------
+RUN sudo apt-get update \
+    && sudo apt-get install -y --no-install-recommends \
+        docker-cli \
+        docker-compose \
+        docker-buildx \
+    && sudo rm -rf /var/lib/apt/lists/*
+
+# Samakan GID grup docker dengan socket host saat container start
+RUN printf '%s\n' \
+        '#!/bin/sh' \
+        'set -e' \
+        'if [ -S /var/run/docker.sock ]; then' \
+        '    gid=$(stat -c "%g" /var/run/docker.sock)' \
+        '    getent group "$gid" >/dev/null 2>&1 || sudo groupadd --gid "$gid" docker' \
+        '    sudo usermod -aG "$gid" '"${USERNAME}" \
+        'fi' \
+        'exec "$@"' \
+        | sudo tee /usr/local/share/docker-init.sh > /dev/null \
+    && sudo chmod +x /usr/local/share/docker-init.sh
+
 WORKDIR /workspaces
+
+ENTRYPOINT ["/usr/local/share/docker-init.sh"]
 
 # Keep the container alive; VS Code attaches to it.
 CMD ["sleep", "infinity"]
