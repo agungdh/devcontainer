@@ -1,0 +1,22 @@
+{
+  "name": "Debian 13",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "containerEnv": {
+    "SHELL": "/bin/bash"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "editorconfig.editorconfig"
+      ]
+    }
+  },
+  "postCreateCommand": "git config --global --add safe.directory /workspaces/${localWorkspaceFolderBasename}"
+}
