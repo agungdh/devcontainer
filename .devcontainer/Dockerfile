@@ -122,6 +122,7 @@ RUN brew tap shivammathur/php \
     && brew update \
     && for v in ${PHP_VERSIONS}; do \
         brew install "shivammathur/php/php@${v}"; \
+        brew postinstall "php@${v}" > /dev/null 2>&1 || true; \
         brew unlink "php@${v}" > /dev/null 2>&1 || true; \
     done \
     && brew link --overwrite --force shivammathur/php/php@8.5
