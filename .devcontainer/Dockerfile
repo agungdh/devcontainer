@@ -39,6 +39,8 @@ RUN apt-get update \
         gping \
         tree \
         ripgrep \
+        file \
+        zstd \
         locales \
         golang-go \
     && rm -rf /var/lib/apt/lists/*
@@ -79,6 +81,34 @@ RUN bash -c 'set -e; \
         ln -sfn "$NVM_DIR/versions/node/$(nvm current)" "$NVM_DIR/current"'
 
 ENV PATH=${NVM_DIR}/current/bin:$PATH
+
+# ---------------------------------------------------------------------------
+# CLI coding agents
+# ---------------------------------------------------------------------------
+# opencode
+RUN curl -fsSL https://opencode.ai/v2/install | bash
+ENV PATH=/home/${USERNAME}/.opencode/bin:$PATH
+
+# Claude Code
+RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV PATH=/home/${USERNAME}/.local/bin:$PATH
+
+# Command Code (npm global, butuh Node.js dari nvm)
+RUN npm i -g command-code@latest
+
+# ---------------------------------------------------------------------------
+# Homebrew
+# ---------------------------------------------------------------------------
+ENV HOMEBREW_NO_ANALYTICS=1 \
+    HOMEBREW_NO_AUTO_UPDATE=1
+
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH
+
+# Login shell (/etc/profile) me-reset PATH, jadi daftarkan ulang via profile.d
+RUN PROFILE_PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.opencode/bin:/home/${USERNAME}/.nvm/current/bin:/home/${USERNAME}/go/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" \
+    && echo "export PATH=\"${PROFILE_PATH}:\$PATH\"" \
+        | sudo tee /etc/profile.d/devcontainer-path.sh > /dev/null
 
 WORKDIR /workspaces
 
