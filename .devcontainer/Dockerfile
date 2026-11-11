@@ -24,16 +24,23 @@ RUN apt-get update \
         jq \
         unzip \
         zip \
+        7zip \
         xz-utils \
         tar \
         less \
         vim \
         nano \
+        screen \
         procps \
         htop \
+        btop \
+        fastfetch \
+        gdu \
+        gping \
         tree \
         ripgrep \
         locales \
+        golang-go \
     && rm -rf /var/lib/apt/lists/*
 
 # Locale (UTF-8)
@@ -41,6 +48,10 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
+
+# Go workspace (bin masuk ke PATH)
+ENV GOPATH=/home/vscode/go \
+    PATH=/home/vscode/go/bin:$PATH
 
 # ---------------------------------------------------------------------------
 # Non-root user with passwordless sudo
