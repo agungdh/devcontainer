@@ -111,14 +111,23 @@ RUN PROFILE_PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.opencode/bin:/
         | sudo tee /etc/profile.d/devcontainer-path.sh > /dev/null
 
 # ---------------------------------------------------------------------------
-# Docker CLI + Compose (Docker-outside-of-Docker)
-# Daemon tetap di host; container hanya memakai /var/run/docker.sock
+# Docker (repo resmi: https://docs.docker.com/engine/install/debian/)
+# Daemon tetap di host; container memakai /var/run/docker.sock
 # ---------------------------------------------------------------------------
 RUN sudo apt-get update \
+    && sudo apt-get install -y --no-install-recommends ca-certificates curl \
+    && sudo install -m 0755 -d /etc/apt/keyrings \
+    && sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+    && sudo chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && sudo apt-get update \
     && sudo apt-get install -y --no-install-recommends \
-        docker-cli \
-        docker-compose \
-        docker-buildx \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-compose-plugin \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # Samakan GID grup docker dengan socket host saat container start
@@ -127,8 +136,13 @@ RUN printf '%s\n' \
         'set -e' \
         'if [ -S /var/run/docker.sock ]; then' \
         '    gid=$(stat -c "%g" /var/run/docker.sock)' \
-        '    getent group "$gid" >/dev/null 2>&1 || sudo groupadd --gid "$gid" docker' \
-        '    sudo usermod -aG "$gid" '"${USERNAME}" \
+        '    if getent group docker >/dev/null 2>&1; then' \
+        '        current=$(getent group docker | cut -d: -f3)' \
+        '        [ "$current" = "$gid" ] || sudo groupmod --gid "$gid" docker' \
+        '    else' \
+        '        sudo groupadd --gid "$gid" docker' \
+        '    fi' \
+        '    sudo usermod -aG docker '"${USERNAME}" \
         'fi' \
         'exec "$@"' \
         | sudo tee /usr/local/share/docker-init.sh > /dev/null \
