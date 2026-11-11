@@ -1,9 +1,6 @@
 {
   "name": "Debian 13",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
-  },
+  "image": "ghcr.io/agungdh/devcontainer:latest",
   "remoteUser": "agungdh",
   "overrideCommand": false,
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
